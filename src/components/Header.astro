@@ -1,0 +1,44 @@
+---
+const { pathname } = Astro.url;
+---
+<header class="fixed z-100 top-0 w-full mx-auto">
+  <nav class="flex justify-between max-w-6xl mx-auto items-center h-24">
+    <div class="flex gap-10">
+      <a class="text-2xl" href="/la-porra">HAZ TU PORRA</a>
+      <a class="text-2xl" href="/combates">VER COMBATES</a>
+    </div>
+    {pathname !== '/' && (
+  <a class="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 transition duration-500 hover:scale-110 md:inline-block" href="/">
+    <img class="h-20" src="/images/logo-header.png" alt="Logo" />
+  </a>
+)}
+    <div>
+      <a class="text-2xl" href="#"> COMPRA ENTRADAS </a>
+    </div>
+  </nav>
+</header>
+
+<style>
+  header {
+    font-family: "Karantina-regular";
+    font-size: 2rem;
+    background: transparent;
+    animation: header-blur-scroll 0.3s linear both;
+    animation-timeline: scroll();
+    animation-range: 0 250px;
+    border-bottom: 1px solid transparent;
+  }
+
+  @keyframes header-blur-scroll {
+    0% {
+      backdrop-filter: blur(0px);
+      background: transparent;
+    }
+    100% {
+      backdrop-filter: blur(10px);
+      background: rgba(255, 217, 0, 0.3);
+      padding-bottom: var(--spacing-6);
+      border-bottom-color: rgb(255, 217, 0);
+    }
+  }
+</style>

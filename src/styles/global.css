@@ -1,0 +1,45 @@
+@import "tailwindcss";
+@plugin "@midudev/tailwind-animations";
+
+
+
+@font-face {
+    font-family: "HeyNovember";
+    src: url("/fonts/HeyNovember.woff") format("woff");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Karantina-Bold";
+    src: url("/fonts/EvanstonTavern-Medium.woff") format("woff");
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Karantina-regular";
+    src: url("/fonts/EvanstonTavern-Medium.woff") format("woff");
+}
+
+html{
+    font-family: 'HeyNovember', sans-serif;
+}
+.katina-bold{
+    font-family: "Karantina-bold";
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+.katina-regular{
+    font-family: "Karantina-regular";
+}
+@utility mask-fade-bottom{
+    mask-image: linear-gradient(to bottom, black 97%, transparent 100%);
+}
+@utility mask-fade-bottom2{
+    mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+}
+@utility mask-fade-bottom3{
+    mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+}

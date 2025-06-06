@@ -1,0 +1,138 @@
+---
+const { id, name, versus } = Astro.props;
+
+const names = ['smash', 'zullyy', 'fanodric', 'glogloking', 'cristorata7']
+const idSeguro = id ?? '';
+const claseExtra = names.includes(idSeguro) ? 'skew-x-[2deg]' : 'skew-x-[-2deg]';
+const clases = `boxer-card inline-block transition hover:-translate-y-3 flex-1 min-w-0 px-[2px] py-[2px] group relative w-full rounded-[calc(1.5rem-1px)] holographic-card ${claseExtra}`.trim();
+---
+
+<a
+  href={`/luchador/${id}`}
+  class= {clases}
+  data-id={versus}
+>
+  <img
+    transition:name={`image-${id}`}
+    class=`fighter-img w-full h-auto rounded-[calc(1.5rem-1px)]`
+    src={`/images/fighters/card/${id}.png`}
+    alt={name}
+    decoding="async"
+    data-image={versus}
+  />
+  <div
+    class="absolute flex items-center text-center justify-center opacity-0  bottom-5 w-full"
+    data-name={versus}
+  >
+    <h3 class="text-2xl">{name}</h3>
+  </div>
+</a>
+<style>
+  .holographic-card {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.5s ease;
+}
+  .holographic-card::after {
+  content: '';
+  position: absolute;
+  z-index: 60;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    0deg, 
+    transparent, 
+    transparent 30%, 
+    rgba(255, 217, 0, 0.3)
+  );
+  
+  transform: rotate(-45deg);
+  transition: all 0.5s ease;
+  opacity: 0;
+}
+.holographic-card-active:after {
+  opacity: 1;
+   z-index: 60;
+  transform: rotate(-45deg) translateY(100%);
+}
+</style>
+<script>
+  document.addEventListener("astro:page-load", () => {
+    const boxerCards = document.querySelectorAll(".boxer-card");
+
+    let timeoutId: null | ReturnType<typeof setTimeout> = null;
+
+    boxerCards.forEach((singleBoxerCard) => {
+      const fighters = document.querySelectorAll(".fighter-img")
+
+      const id = singleBoxerCard.getAttribute("data-id");
+      singleBoxerCard.addEventListener("mouseenter", () => {
+
+      fighters.forEach((el: Element) =>{
+        el.classList.add("filter", "grayscale")
+      })
+      document
+          .querySelectorAll(`[data-image="${id}"]`)
+          .forEach((el: Element, index: number) => {
+  el.classList.remove("filter", "grayscale")
+});
+
+      document
+          .querySelectorAll(`[data-id="${id}"]`)
+          .forEach((el: Element, index: number) => {
+  el.classList.add("bg-gradient-to-b", "from-yellow-300", "to-black-300", "-translate-y-3","holographic-card-active")
+});
+      document
+          .querySelectorAll(`[data-image="${id}"]`)
+          .forEach((el: Element, index: number) => {
+  el.classList.add("bg-black")
+});
+      document
+          .querySelectorAll(`[data-name="${id}"]`)
+          .forEach((el: Element, index: number) => {
+  el.classList.remove("opacity-0")
+});
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        if (id) {
+          const event = new CustomEvent("boxer-card-hovered", {
+            detail: { id },
+          });
+          document.dispatchEvent(event);
+        }
+      });
+
+      singleBoxerCard.addEventListener("mouseleave", () => {
+      fighters.forEach((el: Element) =>{
+        el.classList.remove("filter", "grayscale")
+      })
+      document
+          .querySelectorAll(`[data-id="${id}"]`)
+          .forEach((el: Element, index: number) => {
+  el.classList.remove("bg-gradient-to-b", "from-yellow-300", "to-black-300", "-translate-y-3","holographic-card-active")
+        document
+          .querySelectorAll(`[data-image="${id}"]`)
+          .forEach((el: Element, index: number) => {
+  el.classList.remove("bg-black")
+});
+        document
+          .querySelectorAll(`[data-name="${id}"]`)
+          .forEach((el: Element, index: number) => {
+  el.classList.add("opacity-0")
+});
+});
+                timeoutId = setTimeout(() => {
+          const event = new CustomEvent('boxer-card-exit')
+          document.dispatchEvent(event)
+        }, 500)
+
+      });
+    });
+  });
+</script>

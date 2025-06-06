@@ -1,0 +1,145 @@
+---
+// Este componente se encarga de renderizar una imagen en Three.js y cambiarla dinámicamente.
+---
+
+<div id="three-canvas" class="w-full h-screen block"></div>
+
+<script>
+  import * as THREE from "three";
+
+  document.addEventListener("astro:page-load", () => {
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(
+      45,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+    camera.position.z = 2;
+
+    const imagesSource = [
+      "kingteka-vs-smash",
+      "cristorata-vs-cañita",
+      "glogloking-vs-shadoune",
+      "fanodric-vs-dafonseka",
+      "zullyy-vs-lapinky",
+    ];
+    const images: any[] = [];
+    const loadingManager = new THREE.LoadingManager();
+    const textureLoader = new THREE.TextureLoader(loadingManager);
+
+    imagesSource.map((source) => {
+      textureLoader.load(`/images/fighters/big/${source}.png`, (texture) => {
+        images.push(texture);
+      });
+    });
+    let currentMesh = null;
+    document.addEventListener("astro:page-load", () => {});
+
+    loadingManager.onLoad = () => {
+      console.log(images);
+
+      document.addEventListener("boxer-card-hovered", (event: Event) => {
+        const customEvent = event as CustomEvent<{ id: string }>;
+        const id = customEvent.detail.id;
+
+        console.log(id);
+        for (let i = 0; i < imagesSource.length; i++) {
+          if (id == imagesSource[i]) {
+            // Si ya había uno, lo eliminas
+
+            const material = new THREE.ShaderMaterial({
+              uniforms: {
+                uTexture: { value: images[i] },
+                uTime: { value: 0.0 },
+                uWaveTime: { value: 0.0 },
+                uAuraTime: { value: 0.0 }, // Uniforme para controlar el aura de Super Saiyajin
+              },
+              vertexShader: `    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }`,
+              fragmentShader: `uniform sampler2D uTexture;
+    uniform float uTime;
+    uniform float uWaveTime;
+    uniform float uAuraTime;
+    varying vec2 vUv;
+
+    void main() {
+        vec2 texel = vec2(1.0) / vec2(textureSize(uTexture, 0));
+        float alpha = texture2D(uTexture, vUv).a;
+
+        // Muestrea vecinos
+        float alphaLeft  = texture2D(uTexture, vUv + vec2(-texel.x, 0.0)).a;
+        float alphaRight = texture2D(uTexture, vUv + vec2(texel.x, 0.0)).a;
+        float alphaUp    = texture2D(uTexture, vUv + vec2(0.0, texel.y)).a;
+        float alphaDown  = texture2D(uTexture, vUv + vec2(0.0, -texel.y)).a;
+
+        // Si hay diferencia con vecinos = borde
+        float edge = step(0.05, abs(alpha - alphaLeft) + abs(alpha - alphaRight) + abs(alpha - alphaUp) + abs(alpha - alphaDown));
+
+        // Color dorado
+        vec3 gold = vec3(1.0, 0.843, 0.0);
+
+        // Resplandor animado (Simulando el resplandor Super Saiyajin)
+        float shimmer = 0.5 + 0.5 * sin(uTime * 1.5 + vUv.y * 15.0 + vUv.x * 15.0);  // Movimiento más suave y lento
+        vec3 glow = gold * shimmer;
+
+        // Efecto de ondas (energía)
+        float distanceFromCenter = length(vUv - 0.5); // Calcula la distancia al centro
+        float wave = smoothstep(0.4, 0.5, distanceFromCenter - uWaveTime * 0.1); // Ondas más lentas
+        float waveIntensity = (1.0 - distanceFromCenter) * wave * 2.0;  // Aumenta la intensidad de las ondas
+        vec3 waveGlow = vec3(1.0, 0.843, 0.0) * waveIntensity;  // Color dorado para las ondas
+
+        // Aura Super Saiyajin (Efecto de vibración alrededor del borde)
+        float aura = sin(uAuraTime * 2.0 + distanceFromCenter * 10.0); // Aura más suave y lento
+        aura = smoothstep(0.8, 1.0, aura); // Limitar la vibración del aura
+        vec3 auraGlow = vec3(1.0, 0.8, 0.0) * aura;  // Aura de energía
+
+        // Mezcla el borde dorado con la imagen original, ondas y aura
+        vec3 texColor = texture2D(uTexture, vUv).rgb;
+        vec3 finalColor = mix(texColor, glow + waveGlow + auraGlow, edge); // Aplica todos los efectos al borde
+        
+        // Alpha final (mantener transparencia)
+        float finalAlpha = max(alpha, edge * 0.9);
+
+        gl_FragColor = vec4(finalColor, finalAlpha);
+    }`,
+              transparent: true,
+            });
+            // Escalamos el plano según la proporción de la imagen
+            const aspect = images[0].image.width / images[0].image.height;
+            const geometry = new THREE.PlaneGeometry(aspect * 1.5, 1.5); // Hacer la imagen más grande (escalado)
+            const mesh = new THREE.Mesh(geometry, material);
+
+            scene.add(mesh);
+            currentMesh = mesh;
+            animate();
+          }
+        }
+      });
+    };
+    document.addEventListener("boxer-card-exit", () => {
+      if (currentMesh) {
+        scene.remove(currentMesh);
+        currentMesh.geometry.dispose();
+        currentMesh.material.dispose();
+      }
+    });
+    function animate(time) {
+      // Actualizar el tiempo de animación para que brille, las ondas se expandan y el aura vibre
+      currentMesh.material.uniforms.uTime.value = time * 0.001; // Lento
+      currentMesh.material.uniforms.uWaveTime.value = time * 0.001; // Ondas lentas
+      currentMesh.material.uniforms.uAuraTime.value = time * 0.001; // Aura más lenta
+
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    }
+
+    const renderer = new THREE.WebGLRenderer({ alpha: true }); // Fondo transparente
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000, 0); // Color de fondo transparente
+    document.getElementById("three-canvas")?.appendChild(renderer.domElement);
+  });
+</script>
